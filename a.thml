@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
+	<title></title>
+	<style>
+	*{padding: 0;margin:0;}
+	#ImageDom{-webkit-transform:translate3d(0,0,0);}
+	
+	</style>
+</head>
+<body>
+</body>
+<!-- preventDefault -->
+<script src="iscroll-zoom-min.js?www"></script>
+<script src="html2canvas.min.js?"></script>
+<script>
+var InstantUpload = {
+	LengthCutSize : '10',
+	HeadPercentageOfHeight : 0,
+	imgmoveleft:5,
+	imgmovetop:3,
+	config : {
+	 bodyBkColor:'#000',
+	 headBkColor:'#fff',
+	 TailorHeight:'200',
+	 TailorWidth:'200',
+	 TailorBorderType:'solid',
+	 TailorBorderWidth:'0',
+	 TailorBorderColor:'rgba(0,0,0,0)',
+	 ShadeBkColor:'rgba(0,0,0,.7)',
+	 TailorButtonBkColor:'#fff;padding:2px 4px',
+	 TailorButtonFontColor:'red',
+	 TailorButtonBorder:'1px solid red',
+	 UploadingButtonBkColor:'#fff',
+	 UploadingButtonFontColor:'red',
+	 UploadingButtonBorder:'1px solid red;padding:2px 4px',
+	 UploadingButtonBorderWidth:'40',
+	 UploadingButtonBorderHeight:'40',
+	 BackButtonStyle:'position:fixed;top:46px;border:1px solid red;padding:2px 4px;color:#fff;left:10px;'
+	},
+	main(){
+		this.bodyWidth = document.documentElement.clientWidth;
+		this.bodyHeight = document.documentElement.clientHeight;
+		this.config.HeadHight = this.bodyHeight * this.HeadPercentageOfHeight;
+		this.config.ContainerHight =  this.bodyHeight - this.config.HeadHight;
+		this.CreateInterface();
+		return this;
+	},
+	/**
+	 * 创建界面
+	 */
+	 CreateInterface(){
+	 	document.body.style = "background-color:" + this.config.bodyBkColor + ";";
+		this.CreateHead();
+	 },
+	/**
+	 * 创建头部
+	 */
+	CreateHead(){
+		var div = this.HeadDom = document.createElement("div");
+		div.style = "height:" + this.config.HeadHight + "px;background-color:" + this.config.headBkColor +";position: fixed;top: 0;left: 0;right: 0;z-index:100;" ;
+		document.body.appendChild(div);
+		this.CreateContainer();
+		this.CreateFileButton();
+		this.CreateTailorButton();
+	} ,
+
+	/**
+	 * 创建上传按钮
+	 */
+	 CreateFileButton(){
+	 	var $this = this;
+	 	var button = document.createElement("input");
+	 	button.type = 'file';
+	 	button.style = 'display: inline-block;width:' + this.config.UploadingButtonBorderWidth + 'px;position: absolute;top:0;left:0; opacity: 0;';
+	 	var div = document.createElement("div");
+		div.innerHTML = '上传';
+		this.HeadDom.appendChild(div)
+		div.style = ' display: inline-block;color:' + this.config.UploadingButtonFontColor + ';background-color:' + this.config.UploadingButtonBkColor + ';border:' + this.config.UploadingButtonBorder+ ';width:' + this.config.UploadingButtonBorderWidth + 'px;position:fixed;top:10px;right:10px;';
+		;
+		div.appendChild(button);
+		var img = document.getElementById('ImageDoms');
+		var imgx = document.getElementById('ImageDom');
+		var config = this.config;
+		var $this = this;
+	 	button.addEventListener("change",function(e){
+		    if(button.files[0] == undefined){
+	             return;
+	         }
+	         var file = button.files[0];
+
+	         //图片压缩
+	         var reader = new FileReader(); 
+
+	        
+	         reader.readAsDataURL(file);
+	         reader.onload = function(){
+	         	img.src = this.result;
+	         	
+	         	}
+
+	         img.onload = function(){
+	         	 var width = img.width, height = img.height;
+	         	        //计算缩放比例
+        
+          	var rate = 1;
+
+
+             if (width > $this.bodyWidth) {
+                 rate = $this.bodyWidth  / width * 0.9;
+             }else if (height > $this.config.ContainerHight) {
+                 rate = $this.config.ContainerHight  / height * 0.9;
+             }
+        
+       
+         img.width = width * rate;
+         img.height = height * rate;
+         //生成canvas
+         var canvas = document.createElement("canvas");
+         var ctx = canvas.getContext("2d");
+         canvas.width = img.width;
+         canvas.height = img.height;
+         ctx.drawImage(img, 0, 0, img.width, img.height);
+         var base64 = canvas.toDataURL('image/jpeg', 0.9);
+	
+	         imgx .src = base64;
+	         }
+
+	 	},false);
+
+	 }
+,
+
+	 /**
+	  * 创建裁剪按钮
+	  */
+	CreateTailorButton(){
+		var $this = this;
+		var div = document.createElement("div");
+		div.innerHTML = '确定';
+		div.style = ' display: inline-block;color:' + this.config.TailorButtonFontColor + ';background-color:' + this.config.TailorButtonBkColor + ';position:fixed;top:10px;left:10px;border:' + this.config.TailorButtonBorder+ ';';
+		this.HeadDom.appendChild(div);
+		var ImageDom = this.ImageDom;
+		div.addEventListener('click',function(e){
+			if(ImageDom.src.length < 100){
+				return alert('请上传图片!');
+			};
+	 html2canvas(document.getElementById('DivId')).then(function(canvas) {
+     		  $this.TailorCallBack(canvas.toDataURL());
+         }); 
+
+		});
+		$this. CreateBackButton();
+	},
+	/**
+	 * 创建返回按钮
+	 */
+	 CreateBackButton(){
+	 	var $this = this;
+	 	var div = document.createElement("div");
+		div.innerHTML = '返回';
+		div.style = this.config.BackButtonStyle;
+		$this.HeadDom.appendChild(div);
+		div.addEventListener('click',function(){
+			$this.BackCallBack();
+		});
+	 },
+	/**
+	 * 创建裁剪容器
+	 */
+	
+	CreateContainer(){
+		var div = this.ContainerDom = document.createElement("div");
+		div.style = "height:" + this.config.ContainerHight + "px;position: fixed;left: 0;right: 0;bottom: 0;z-index:10;";
+		document.body.appendChild(div);
+		this.CrteateTailor();
+	},
+
+	/**
+	 * 创建裁剪框
+	 */
+	 CrteateTailor(){
+	 	if((parseInt(this.config.TailorWidth) + 2 *  parseInt(this.config.TailorBorderWidth)) > this.bodyWidth ){
+	 		this.config.TailorWidth = this.bodyWidth - this.LengthCutSize;
+	 	}
+	 	if((parseInt(this.config.TailorHeight) + 2 *  parseInt(this.config.TailorBorderWidth)) > this.config.ContainerHight ){
+	 		this.config.TailorHeight = this.config.ContainerHight - this.LengthCutSize;
+	 	}
+	 	var TailorDistanceLeft = this.TailorDistanceLeft = this.config.TailorDistanceLeft = (this.bodyWidth - this.config.TailorWidth  - 2 *  this.config.TailorBorderWidth) >>> 1;
+	 	var TailorDistanceTop = this.config.TailorDistanceTop = (this.config.ContainerHight -  this.config.TailorHeight  - 2 *  this.config.TailorBorderWidth) >>> 1;
+	 	var div = this.TailorDom = document.createElement("div");
+	 	div.style = "height:" + this.config.TailorHeight + "px;width:" + this.config.TailorWidth + "px;border:" + this.config.TailorBorderType + ' ' + this.config.TailorBorderColor + ' ' + this.config.TailorBorderWidth + 'px;position: relative;z-index:2;left:' + TailorDistanceLeft + 'px;top:' + TailorDistanceTop + 'px;display: inline-block;';
+	 	div.id = 'DivId';
+	 	this.ContainerDom.appendChild(div);
+	 	this.CreateShade();
+	 },
+
+	/**
+	 * 创建遮罩层
+	 */
+	CreateShade(){
+		var leftdiv = this.leftdiv = document.createElement("div");
+		var rightdiv = document.createElement("div");
+		var topdiv = this.topdiv = document.createElement("div");
+		var bottomdiv = document.createElement("div");
+		leftdiv.style = "position: fixed;z-index:3;left:0;top:"+ this.config.HeadHight +"px;bottom:0;width:" + this.TailorDistanceLeft + "px;background-color:"+ this.config.ShadeBkColor + ";";
+		rightdiv.style = "position: fixed;z-index:3;right:0;top:"+ this.config.HeadHight +"px;bottom:0;width:" + this.TailorDistanceLeft + "px;background-color:"+ this.config.ShadeBkColor + ";";
+		topdiv.style = "position: fixed;z-index:3;right:" + this.TailorDistanceLeft + "px;top:"+ this.config.HeadHight +"px;background-color:"+ this.config.ShadeBkColor + ";width:" + (this.bodyWidth - this.TailorDistanceLeft * 2) + "px;height:" + this.config.TailorDistanceTop + "px;";
+		bottomdiv.style = "position: fixed;z-index:3;right:" + this.TailorDistanceLeft + "px;bottom:0;background-color:"+ this.config.ShadeBkColor + ";width:" + (this.bodyWidth - this.TailorDistanceLeft * 2) + "px;height:" + (this.config.ContainerHight - this.config.TailorDistanceTop - this.config.TailorHeight - this.config.TailorBorderWidth * 2 ) + "px;";
+		this.ContainerDom.appendChild(leftdiv);
+		this.ContainerDom.appendChild(rightdiv);
+		this.ContainerDom.appendChild(topdiv);
+		this.ContainerDom.appendChild(bottomdiv);
+		this.CreateImage();
+
+	},
+
+	/**
+	 * 创建img容器
+	 */
+	CreateImage(){
+		var Images = this.ImageDoms = document.createElement("img");
+
+		var Image = this.ImageDom = document.createElement("img");
+		Image.id = 'ImageDom';
+		Images.id = 'ImageDoms'
+		var TailorDistanceLeft = this.TailorDistanceLeft;
+		this.TailorDom.appendChild(Image);
+		Images.style = 'display:none;'
+		document.body.appendChild(Images);
+		var $this = this;
+
+	/**
+	 * \监听手指触屏
+	 */
+	var   myScroll = new IScroll('#DivId', {
+		  zoom: true,
+          scrollX: true,
+          scrollY: true,
+          freeScroll: true,
+          mouseWheel: true,
+          disablePointer: true,
+          // important to disable the pointer events that causes the issues
+          disableTouch: false,
+          // false if you want the slider to be usable with touch devices
+          disableMouse: false,
+          // false if you want the slider to be usable with a mouse (desktop)
+          wheelAction: 'zoom',
+          bounceTime: 1000,
+          zoomMax: 2
+	});
+
+
+     myScroll.on('zoomEnd', function () {
+    
+       });
+
+	},
+	//裁剪完图的回调
+	TailorCallBack(e){
+
+	},
+	BackCallBack(){
+
+	},
+	SetBackCallBack(f){
+		this.BackCallBack = f;
+		return this;
+	}
+}
+
+InstantUpload.main().SetBackCallBack(function(){
+	alert('返回!');
+}).TailorCallBack = function(e){
+	alert(e);
+};
+</script>
+</html>
+
