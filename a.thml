@@ -6,13 +6,10 @@
 	<title></title>
 	<style>
 	*{padding: 0;margin:0;}
-	#ImageDom{-webkit-transform:translate3d(0,0,0);}
-	
 	</style>
 </head>
 <body>
 </body>
-<!-- preventDefault -->
 <script src="iscroll-zoom-min.js?www"></script>
 <script src="html2canvas.min.js?"></script>
 <script>
@@ -24,8 +21,8 @@ var InstantUpload = {
 	config : {
 	 bodyBkColor:'#000',
 	 headBkColor:'#fff',
-	 TailorHeight:'200',
-	 TailorWidth:'200',
+	 TailorHeight:'313',
+	 TailorWidth:'210',
 	 TailorBorderType:'solid',
 	 TailorBorderWidth:'0',
 	 TailorBorderColor:'rgba(0,0,0,0)',
@@ -67,7 +64,7 @@ var InstantUpload = {
 		this.CreateTailorButton();
 	} ,
 
-	/**
+	/**console.log('xxx');
 	 * 创建上传按钮
 	 */
 	 CreateFileButton(){
@@ -93,39 +90,58 @@ var InstantUpload = {
 
 	         //图片压缩
 	         var reader = new FileReader(); 
-
-	        
 	         reader.readAsDataURL(file);
 	         reader.onload = function(){
 	         	img.src = this.result;
-	         	
+
 	         	}
 
+	        var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
 	         img.onload = function(){
-	         	 var width = img.width, height = img.height;
-	         	        //计算缩放比例
-        
-          	var rate = 1;
-
-
-             if (width > $this.bodyWidth) {
-                 rate = $this.bodyWidth  / width * 0.9;
-             }else if (height > $this.config.ContainerHight) {
-                 rate = $this.config.ContainerHight  / height * 0.9;
-             }
-        
-       
-         img.width = width * rate;
-         img.height = height * rate;
-         //生成canvas
-         var canvas = document.createElement("canvas");
-         var ctx = canvas.getContext("2d");
-         canvas.width = img.width;
-         canvas.height = img.height;
-         ctx.drawImage(img, 0, 0, img.width, img.height);
-         var base64 = canvas.toDataURL('image/jpeg', 0.9);
-	
+	        // 图片原始尺寸
+                var originWidth = img.width;
+                var originHeight = img.height;
+                // 最大尺寸限制，可通过国设置宽高来实现图片压缩程度
+                var maxWidth = parseInt($this.bodyWidth) * 2,
+                    maxHeight = parseInt($this.config.ContainerHight) *2;
+               
+                // 目标尺寸
+                var targetWidth = originWidth,
+                    targetHeight = originHeight;
+             
+                if(originWidth > maxWidth || originHeight > maxHeight) {
+                    if(originWidth / originHeight > maxWidth / maxHeight) {
+                        // 更宽，按照宽度限定尺寸
+                        targetWidth = maxWidth;
+                        targetHeight = Math.round(maxWidth * (originHeight / originWidth));
+                    } else {
+                        targetHeight = maxHeight;
+                        targetWidth = Math.round(maxHeight * (originWidth / originHeight));
+                    }
+                }
+                // canvas对图片进行缩放
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+                // 清除画布
+                context.clearRect(0, 0, targetWidth, targetHeight);
+                // 图片压缩
+                context.drawImage(img, 0, 0, targetWidth, targetHeight);
+                /*第一个参数是创建的img对象；第二个参数是左上角坐标，后面两个是画布区域宽高*/
+                //压缩后的图片base64 url
+                /*canvas.toDataURL(mimeType, qualityArgument),mimeType 默认值是'image/jpeg';
+                 * qualityArgument表示导出的图片质量，只要导出为jpg和webp格式的时候此参数才有效果，默认值是0.92*/
+                var base64 = canvas.toDataURL('image/jpeg', 1);//base64 格式
 	         imgx .src = base64;
+	         imgx.style = 'transform-origin: 0px 0px; transition-timing-function: cubic-bezier(0.1, 0.57, 0.1, 1); transition-duration: 0ms; transform: translate(-39.337px, 0px) scale(2) translateZ(0px);';
+	          $this.Scroll.refresh();
+
+	        	imgx.width = $this.config.TailorWidth;
+	         	imgx.height = $this.config.TailorHeight;
+
+
+
+	        // imgx .style = 'transform:scale(2);';
 	         }
 
 	 	},false);
@@ -148,6 +164,7 @@ var InstantUpload = {
 				return alert('请上传图片!');
 			};
 	 html2canvas(document.getElementById('DivId')).then(function(canvas) {
+
      		  $this.TailorCallBack(canvas.toDataURL());
          }); 
 
@@ -222,7 +239,6 @@ var InstantUpload = {
 	 */
 	CreateImage(){
 		var Images = this.ImageDoms = document.createElement("img");
-
 		var Image = this.ImageDom = document.createElement("img");
 		Image.id = 'ImageDom';
 		Images.id = 'ImageDoms'
@@ -249,13 +265,12 @@ var InstantUpload = {
           // false if you want the slider to be usable with a mouse (desktop)
           wheelAction: 'zoom',
           bounceTime: 1000,
-          zoomMax: 2
+          startZoom:1.2,
+          zoomMax:2.5
+         
 	});
-
-
-     myScroll.on('zoomEnd', function () {
-    
-       });
+	console.log(myScroll);
+	this.Scroll = myScroll;
 
 	},
 	//裁剪完图的回调
@@ -272,9 +287,10 @@ var InstantUpload = {
 }
 
 InstantUpload.main().SetBackCallBack(function(){
-	alert('返回!');
-}).TailorCallBack = function(e){
-	alert(e);
+	//var $this = window.parent.document.getElementById('uploadings');
+	//$this.style.display = 'none';
+}).TailorCallBack = function(base64){
+	//var $this = window.parent.document.getElementById('uploadings');$this.style.display = 'none';window.parent.document.getElementById('jg').src =base64;window.parent.document.getElementById('images').value = base64;return false;
 };
 </script>
 </html>
